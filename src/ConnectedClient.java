@@ -85,7 +85,9 @@ public class ConnectedClient extends Thread {
             running = false;
             write.println("EXIT");
             socket.close();
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
     }
 
 }
