@@ -77,7 +77,9 @@ public class ConnectedClient extends Thread {
         running = false;
         try {
             socket.close();
-        } catch(Exception e) {}
+        } catch(Exception e) {
+            System.out.println(e.toString());
+        }
     }
 
     public void ServerShutdown() {
