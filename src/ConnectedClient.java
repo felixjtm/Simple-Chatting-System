@@ -11,7 +11,7 @@ public class ConnectedClient extends Thread {
     private BufferedReader read;
     private String receivedLine;
     private static List<ConnectedClient> clients;
-    private boolean running;
+    private volatile boolean running;
     private String name;
 
     public ConnectedClient(Socket s, List<ConnectedClient> c) {
@@ -43,37 +43,39 @@ public class ConnectedClient extends Thread {
             System.out.println("Error receiving name: " + e.toString());
         }
 
-        SendToAllClients(name + " has connected to the server.");
+        sendToAllClients(name + " has connected to the server.");
         while (running) {
             try {
 
                 receivedLine = read.readLine();
                 if (receivedLine != null) {
                     if (receivedLine.equals("EXIT")) {
-                        EndConnection();
+                        endConnection();
                     } else {
-                        SendToAllClients(name + ": " + receivedLine);
+                        sendToAllClients(name + ": " + receivedLine);
                     }
                 }
 
             } catch (Exception e) {
-                System.out.println(name + " has lost connection to the server.");
-                EndConnection();
-                running = false;
+                if (running) {
+                    System.out.println(name + " has lost connection to the server.");
+                    endConnection();
+                    running = false;
+                }
             }
         }
     }
 
-    public synchronized void SendToAllClients(String message) {
+    public synchronized void sendToAllClients(String message) {
         for (ConnectedClient client : clients) {
             client.write.println(message);
         }
         System.out.println(message);
     }
 
-    private void EndConnection()  {
+    private void endConnection()  {
         clients.remove(this);
-        SendToAllClients(name + " has disconnected from the server.");
+        sendToAllClients(name + " has disconnected from the server.");
         running = false;
         try {
             socket.close();
@@ -82,11 +84,12 @@ public class ConnectedClient extends Thread {
         }
     }
 
-    public void ServerShutdown() {
+    public synchronized void serverShutdown() {
         try {
             running = false;
             write.println("EXIT");
             socket.close();
+            System.out.println(name + " has disconnected from the server.");
         } catch (Exception e) {
             System.out.println(e.toString());
         }

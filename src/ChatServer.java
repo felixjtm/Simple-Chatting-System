@@ -10,7 +10,7 @@ public class ChatServer {
     private Socket socket;
     private ServerSocket serverSocket;
     private List<ConnectedClient> clients;
-    private boolean running;
+    private volatile boolean running;
 
     public ChatServer(int p) {
         running = true;
@@ -39,11 +39,13 @@ public class ChatServer {
                     if (line != null) {
                         if (line.equals("EXIT")) {
                             for (ConnectedClient client : clients) {
-                                client.ServerShutdown();
+                                client.serverShutdown();
                             }
+                            running = false;
+                            System.exit(0);
                         } else {
                             if (!clients.isEmpty()) {
-                                clients.get(0).SendToAllClients("Server: " + line);
+                                clients.get(0).sendToAllClients("Server: " + line);
                             }
                         }
                     }

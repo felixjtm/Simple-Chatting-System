@@ -13,7 +13,7 @@ public class ChatClient {
     private BufferedReader serverRead;
     private BufferedReader clientRead;
     private Thread listener;
-    private boolean running;
+    private volatile boolean running;
     private String name;
 
     private ChatClient(int p, String host, String n) {
@@ -42,7 +42,8 @@ public class ChatClient {
                             inputLine = serverRead.readLine();
                             if (inputLine != null) {
                                 if (inputLine.equals("EXIT")) {
-
+                                    System.out.println("The server has shut down.");
+                                    disconnect();
                                 } else {
                                     System.out.println(inputLine);
                                 }
@@ -73,16 +74,24 @@ public class ChatClient {
                 if (inputLine != null) {
                     write.println(inputLine);
                     if (inputLine.equals("EXIT")) {
-                        listener.join();
-                        socket.close();
-                        running = false;
-                        System.out.println("Disconnected.");
+                        disconnect();
                     }
                 }
             } catch (Exception e) {
                 System.out.println("Error attempting to write to server: " + e.toString());
                 running = false;
             }
+        }
+    }
+
+    private void disconnect() {
+        try {
+            running = false;
+            socket.close();
+            System.out.println("Disconnected.");
+            System.exit(0);
+        } catch(Exception e) {
+            System.out.println("Error disconnecting from server: " + e.toString());
         }
     }
 
