@@ -11,9 +11,11 @@ public class ChatServer {
     private ServerSocket serverSocket;
     private List<ConnectedClient> clients;
     private volatile boolean running;
+    private int clientId;
 
     public ChatServer(int p) {
         running = true;
+        clientId = 1;
         port = p;
         clients = new LinkedList<>();
         System.out.println("Setting up server...");
@@ -45,7 +47,7 @@ public class ChatServer {
                             System.exit(0);
                         } else {
                             if (!clients.isEmpty()) {
-                                clients.get(0).sendToAllClients("Server: " + line);
+                                clients.get(0).sendToAllOtherClients("Server: " + line);
                             }
                         }
                     }
@@ -62,9 +64,10 @@ public class ChatServer {
                 socket = serverSocket.accept();
                 System.out.println("Setting up client " + socket);
 
-                client = new ConnectedClient(socket, clients);
+                client = new ConnectedClient(socket, clients, clientId);
                 client.start();
                 clients.add(client);
+                clientId++;
             }
         } catch(Exception e){
             System.out.println("Error accepting client: " + e.toString());

@@ -2,7 +2,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Scanner;
 
 public class ChatClient {
 
@@ -14,13 +13,11 @@ public class ChatClient {
     private BufferedReader clientRead;
     private Thread listener;
     private volatile boolean running;
-    private String name;
 
-    private ChatClient(int p, String host, String n) {
+    private ChatClient(int p, String host) {
         port = p;
         hostName = host;
         running = true;
-        name = n;
         try {
             System.out.println("Connecting to server " + hostName + " through port " + port + "...");
             socket = new Socket(hostName, port);
@@ -31,8 +28,6 @@ public class ChatClient {
             serverRead = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             clientRead = new BufferedReader(new InputStreamReader(System.in));
-
-            write.println(name);
 
             listener = new Thread() {
                 public void run() {
@@ -114,12 +109,7 @@ public class ChatClient {
             }
         }
 
-        Scanner read = new Scanner(System.in);
-        String name;
-        System.out.print("Enter your name: ");
-        name = read.nextLine();
-
-        ChatClient client = new ChatClient(port, address, name);
+        ChatClient client = new ChatClient(port, address);
 
     }
 }

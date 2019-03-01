@@ -14,11 +14,11 @@ public class ConnectedClient extends Thread {
     private volatile boolean running;
     private String name;
 
-    public ConnectedClient(Socket s, List<ConnectedClient> c) {
+    public ConnectedClient(Socket s, List<ConnectedClient> c, int id) {
         socket = s;
         clients = c;
         running = true;
-        name = socket.toString();
+        name = "Client " + id;
         System.out.println("New client created!");
 
         try {
@@ -33,17 +33,8 @@ public class ConnectedClient extends Thread {
     @Override
     public void run() {
         write.println("Server: Welcome! Enter EXIT to disconnect from the server.");
-        try {
-            String nameLine = read.readLine();
-            while (nameLine == null) {
-                nameLine = read.readLine();
-            }
-            name = nameLine;
-        } catch(Exception e) {
-            System.out.println("Error receiving name: " + e.toString());
-        }
 
-        sendToAllClients(name + " has connected to the server.");
+        sendToAllOtherClients(name + " has connected to the server.");
         while (running) {
             try {
 
@@ -52,7 +43,7 @@ public class ConnectedClient extends Thread {
                     if (receivedLine.equals("EXIT")) {
                         endConnection();
                     } else {
-                        sendToAllClients(name + ": " + receivedLine);
+                        sendToAllOtherClients(name + ": " + receivedLine);
                     }
                 }
 
@@ -66,16 +57,18 @@ public class ConnectedClient extends Thread {
         }
     }
 
-    public synchronized void sendToAllClients(String message) {
+    public synchronized void sendToAllOtherClients(String message) {
         for (ConnectedClient client : clients) {
-            client.write.println(message);
+            if (client != this) {
+                client.write.println(message);
+            }
         }
         System.out.println(message);
     }
 
     private void endConnection()  {
         clients.remove(this);
-        sendToAllClients(name + " has disconnected from the server.");
+        sendToAllOtherClients(name + " has disconnected from the server.");
         running = false;
         try {
             socket.close();
